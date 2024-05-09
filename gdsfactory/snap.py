@@ -69,7 +69,7 @@ def snap_to_grid(
     return y
 
 
-snap_to_grid2x = partial(snap_to_grid, grid_factor=2)
+snap_to_grid2x = partial(snap_to_grid, grid_factor=1)
 
 
 if __name__ == "__main__":
