@@ -27,7 +27,7 @@ nm = 1e-3
 
 Layer = tuple[int, int]
 Layers = tuple[Layer, ...]
-WidthTypes = Literal["sine", "linear", "parabolic"]
+WidthTypes = Literal["elliptical", "sine", "linear", "parabolic"]
 
 LayerSpec = Layer | str
 LayerSpecs = list[LayerSpec] | tuple[LayerSpec, ...]

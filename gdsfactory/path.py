@@ -515,6 +515,13 @@ def _linear_transition(y1, y2):
 
     return linear
 
+def _elliptical_transition(y1, y2):
+    dy = y2 - y1
+
+    def ellipse(t):
+        return y2 - dy * np.sqrt(1 - t ** 2)
+
+    return ellipse
 
 def transition_exponential(y1, y2, exp=0.5):
     """Returns the function for an exponential transition.
@@ -1049,6 +1056,8 @@ def extrude_transition(
             width = _sinusoidal_transition(width1, width2)
         elif width_type == "parabolic":
             width = _parabolic_transition(width1, width2)
+        elif width_type == "elliptical":
+            width = _elliptical_transition(width1, width2)
         elif callable(width_type):
 
             def width_func(t):
