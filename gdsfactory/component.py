@@ -363,10 +363,8 @@ class ComponentBase:
             if center is None:
                 raise ValueError("Must specify center")
             elif isinstance(center, kdb.DPoint):
-                layer = get_layer(layer)
                 trans = kdb.DCplxTrans(1, orientation, False, center.to_v())
             else:
-                layer = get_layer(layer)
                 x = float(center[0])
                 y = float(center[1])
                 trans = kdb.DCplxTrans(1, float(orientation), False, x, y)

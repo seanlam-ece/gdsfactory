@@ -63,6 +63,7 @@ def extend_ports(
     cross_section: CrossSectionSpec | None = None,
     extension_port_names: list[str] | None = None,
     allow_width_mismatch: bool = False,
+    allow_layer_mismatch: bool = False,
     **kwargs,
 ) -> Component:
     """Returns a new component with some ports extended.
@@ -83,6 +84,7 @@ def extend_ports(
             if port has no cross_section it creates one using width and layer.
         extension_port_names: extension port names add to the new component.
         allow_width_mismatch: allow width mismatches.
+        allow_layer_mismatch: if True, does not check if port layer matches destination.
         kwargs: cross_section settings.
 
     Keyword Args:
@@ -126,9 +128,16 @@ def extend_ports(
             if extension:
                 extension_component = gf.get_component(extension)
             else:
-                cross_section_extension = cross_section or cross_section_function(
-                    layer=port.layer, width=port.dwidth
-                )
+                try:
+                    cross_section_extension = cross_section or cross_section_function(
+                        layer=port.layer, width=port.dwidth
+                    )
+                except:
+                    cross_section_extension = cross_section or cross_section_function(
+                        layer=(port.kcl.get_info(port.layer).layer, port.kcl.get_info(port.layer).datatype), width=port.dwidth
+                    )
+                    allow_layer_mismatch = True
+
 
                 if cross_section_extension is None:
                     raise ValueError("cross_section=None for extend_ports")
@@ -143,7 +152,7 @@ def extend_ports(
 
             extension_ref = c << extension_component
             extension_ref.connect(
-                port1, port, allow_width_mismatch=allow_width_mismatch
+                port1, port, allow_width_mismatch=allow_width_mismatch, allow_layer_mismatch=allow_layer_mismatch
             )
             c.add_port(port_name, port=extension_ref.ports[port2])
             extension_port_names = extension_port_names or []
@@ -153,6 +162,14 @@ def extend_ports(
             ]
         else:
             c.add_port(port_name, port=component.ports[port_name])
+
+    # Return port layers back to integers
+    for i in range(0, len(c.ports)):
+        c.ports[i].layer = ports_all[i].layer
+
+    for i in range(0, len(c.references)):
+        for j in range(0, len(c.references[i].cell.ports)):
+            c.references[i].cell.ports[j].layer = gf.get_layer(c.references[i].cell.ports[j].layer)
 
     c.copy_child_info(component)
     return c
