@@ -334,8 +334,11 @@ class LayerStack(BaseModel):
         for level in self.layers.values():
             if level.thickness:
                 if type(level.layer) == LogicalLayer:
-                    layer_to_thickness[(level.layer.layer.layer,
-                                   level.layer.layer.datatype)] = level.thickness
+                    try:
+                        layer_to_thickness[(level.layer.layer.layer,
+                                       level.layer.layer.datatype)] = level.thickness
+                    except AttributeError:
+                        layer_to_thickness[level.layer.layer] = level.thickness
                 elif type(level.layer) == DerivedLayer:
                     layer_to_thickness[(level.derived_layer.layer.layer,
                                    level.derived_layer.layer.datatype)] = level.thickness
@@ -353,7 +356,10 @@ class LayerStack(BaseModel):
         for level in self.layers.values():
             if level.thickness:
                 if type(level.layer) == LogicalLayer:
-                    layer_to_zmin[(level.layer.layer.layer, level.layer.layer.datatype)] = level.zmin
+                    try:
+                        layer_to_zmin[(level.layer.layer.layer, level.layer.layer.datatype)] = level.zmin
+                    except AttributeError:
+                        layer_to_zmin[level.layer.layer] = level.zmin
                 elif type(level.layer) == DerivedLayer:
                     layer_to_zmin[(level.derived_layer.layer.layer,
                                    level.derived_layer.layer.datatype)] = level.zmin
@@ -365,8 +371,11 @@ class LayerStack(BaseModel):
         for level in self.layers.values():
             if level.thickness:
                 if type(level.layer) == LogicalLayer:
-                    layer_to_material[(level.layer.layer.layer,
+                    try:
+                        layer_to_material[(level.layer.layer.layer,
                                    level.layer.layer.datatype)] = level.material
+                    except AttributeError:
+                        layer_to_material[level.layer.layer] = level.material
                 elif type(level.layer) == DerivedLayer:
                     layer_to_material[(level.derived_layer.layer.layer,
                                    level.derived_layer.layer.datatype)] = level.material
@@ -378,8 +387,11 @@ class LayerStack(BaseModel):
         for level in self.layers.values():
             if level.thickness:
                 if type(level.layer) == LogicalLayer:
-                    layer_to_sidewall_angle[(level.layer.layer.layer,
+                    try:
+                        layer_to_sidewall_angle[(level.layer.layer.layer,
                                        level.layer.layer.datatype)] = level.sidewall_angle
+                    except AttributeError:
+                        layer_to_sidewall_angle[level.layer.layer] = level.sidewall_angle
                 elif type(level.layer) == DerivedLayer:
                     layer_to_sidewall_angle[(level.derived_layer.layer.layer,
                                        level.derived_layer.layer.datatype)] = level.sidewall_angle
@@ -390,8 +402,12 @@ class LayerStack(BaseModel):
         layer_to_info = {}
         for level in self.layers.values():
             if type(level.layer) == LogicalLayer:
-                layer_to_info[(level.layer.layer.layer,
+                try:
+                    layer_to_info[(level.layer.layer.layer,
                                          level.layer.layer.datatype)] = level.info
+                except AttributeError:
+                    layer_to_info[
+                        level.layer.layer] = level.info
             elif type(level.layer) == DerivedLayer:
                 layer_to_info[(level.derived_layer.layer.layer,
                                          level.derived_layer.layer.datatype)] = level.info
@@ -402,8 +418,12 @@ class LayerStack(BaseModel):
         layer_to_layername = {}
         for level_name, level in self.layers.items():
             if type(level.layer) == LogicalLayer:
-                layer_to_layername[(level.layer.layer.layer,
+                try:
+                    layer_to_layername[(level.layer.layer.layer,
                                level.layer.layer.datatype)] = level_name
+                except AttributeError:
+                    layer_to_layername[level.layer.layer] = level_name
+
             elif type(level.layer) == DerivedLayer:
                 layer_to_layername[(level.derived_layer.layer.layer,
                                level.derived_layer.layer.datatype)] = level_name
