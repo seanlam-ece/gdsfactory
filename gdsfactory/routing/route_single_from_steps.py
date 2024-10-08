@@ -26,12 +26,10 @@ def route_single_from_steps(
     steps: Sequence[Mapping[Literal["x", "y", "dx", "dy"], int | float]] | None = None,
     bend: ComponentSpec = "bend_euler",
     straight: ComponentSpec = "straight",
-    taper: ComponentSpec | None = "taper",
     cross_section: CrossSectionSpec | MultiCrossSectionAngleSpec = "strip",
-    auto_widen: bool = False,
-    taper_length: float | None = None,
     port_type: str | None = None,
     allow_width_mismatch: bool = False,
+    auto_taper: bool = True,
     **kwargs,
 ) -> ManhattanRoute:
     """Places a route formed by the given waypoints steps.
@@ -48,12 +46,10 @@ def route_single_from_steps(
         steps: that define the route (x, y, dx, dy) [{'dx': 5}, {'dy': 10}].
         bend: function that returns bends.
         straight: straight spec.
-        taper: taper spec.
         cross_section: cross_section spec.
-        auto_widen: if True, tapers to wider straights.
-        taper_length: length of the taper if auto_widen=True.
         port_type: optical or electrical.
         allow_width_mismatch: if True, allows width mismatch.
+        auto_taper: if True, adds taper to the route.
         kwargs: cross_section settings.
 
     .. plot::
@@ -118,20 +114,6 @@ def route_single_from_steps(
     else:
         xs = gf.get_cross_section(cross_section, **kwargs)
 
-        if auto_widen:
-            if taper_length is None:
-                raise ValueError("taper_length is required when auto_widen=True")
-            taper = gf.get_component(
-                taper,
-                length=taper_length,
-                width1=xs.width,
-                width2=xs.width_wide,
-                cross_section=cross_section,
-                **kwargs,
-            )
-        else:
-            taper = None
-
     port_type = port_type or port1.port_type
     return route_single(
         component=component,
@@ -140,16 +122,18 @@ def route_single_from_steps(
         waypoints=waypoints,
         bend=bend,
         straight=straight,
-        taper=taper,
         cross_section=cross_section,
         port_type=port_type,
         allow_width_mismatch=allow_width_mismatch,
+        auto_taper=auto_taper,
         **kwargs,
     )
 
 
 route_single_from_steps_electrical = partial(
-    route_single_from_steps, bend="wire_corner", taper=None, cross_section="metal3"
+    route_single_from_steps,
+    bend="wire_corner",
+    cross_section="metal3",  # taper=None,
 )
 
 
@@ -160,7 +144,7 @@ if __name__ == "__main__":
     w = gf.components.straight()
     left = c << w
     right = c << w
-    right.dmove((100, 80))
+    right.dmove((500, 80))
 
     obstacle = gf.components.rectangle(size=(100, 10), port_type=None)
     obstacle1 = c << obstacle

@@ -1,7 +1,63 @@
 # [Changelog](https://keepachangelog.com/en/1.0.0/)
-## [Unreleased](https://github.com/gdsfactory/gdsfactory/compare/v8.8.7...main)
+## [Unreleased](https://github.com/gdsfactory/gdsfactory/compare/v8.11.0...main)
 
 <!-- towncrier release notes start -->
+
+## [8.11.1](https://github.com/gdsfactory/gdsfactory/releases/tag/v8.11.1) - 2024-10-08
+
+No significant changes.
+
+
+## [8.11.0](https://github.com/gdsfactory/gdsfactory/releases/tag/v8.11.0) - 2024-10-03
+
+- enable route_bundle with waypoints or steps [#3224](https://github.com/gdsfactory/gdsfactory/pull/3224)
+- better yaml error messages when component missing from pdk [#3238](https://github.com/gdsfactory/gdsfactory/pull/3238)
+
+## [8.10.2](https://github.com/gdsfactory/gdsfactory/releases/tag/v8.10.2) - 2024-10-02
+
+- fix route_ports_to_side [#3236](https://github.com/gdsfactory/gdsfactory/pull/3236)
+- update kfactory to 0.20.8
+
+## [8.10.1](https://github.com/gdsfactory/gdsfactory/releases/tag/v8.10.1) - 2024-10-01
+
+- Improve edge coupler docs and fix grid_with_text [#3234](https://github.com/gdsfactory/gdsfactory/pull/3234)
+
+## [8.10.0](https://github.com/gdsfactory/gdsfactory/releases/tag/v8.10.0) - 2024-09-30
+
+- Add post process to array [#3231](https://github.com/gdsfactory/gdsfactory/pull/3231)
+- remove taper cell [#3230](https://github.com/gdsfactory/gdsfactory/pull/3230)
+- make port array post_process and iterable [#3232](https://github.com/gdsfactory/gdsfactory/pull/3232)
+
+## [8.9.1](https://github.com/gdsfactory/gdsfactory/releases/tag/v8.9.1) - 2024-09-29
+
+- fix docs [#3226](https://github.com/gdsfactory/gdsfactory/pull/3226)
+- update kfactory to 0.20.7 [#3229](https://github.com/gdsfactory/gdsfactory/pull/3229)
+
+## [8.9.0](https://github.com/gdsfactory/gdsfactory/releases/tag/v8.9.0) - 2024-09-28
+
+- auto tapering v2 [#3223](https://github.com/gdsfactory/gdsfactory/pull/3223)
+
+## [8.8.9](https://github.com/gdsfactory/gdsfactory/releases/tag/v8.8.9) - 2024-09-27
+
+- More generic components [#3219](https://github.com/gdsfactory/gdsfactory/pull/3219)
+
+## [8.8.8](https://github.com/gdsfactory/gdsfactory/releases/tag/v8.8.8) - 2024-09-20
+
+- Fix netlists [#3215](https://github.com/gdsfactory/gdsfactory/pull/3215)
+- fix add_port returning the port itself instead of the actual added port [#3205](https://github.com/gdsfactory/gdsfactory/pull/3205)
+- fix klayout package icon [#3202](https://github.com/gdsfactory/gdsfactory/pull/3202)
+- watcher allows to overwrite existing cells [#3193](https://github.com/gdsfactory/gdsfactory/pull/3193)
+- better defaults for greek cross [#3214](https://github.com/gdsfactory/gdsfactory/pull/3214)
+- better defaults for gf.components.rectangles [#3198](https://github.com/gdsfactory/gdsfactory/pull/3198)
+- Check coupler radius [#3212](https://github.com/gdsfactory/gdsfactory/pull/3212)
+- improve types [#3211](https://github.com/gdsfactory/gdsfactory/pull/3211)
+- improve klayout extension doc [#3203](https://github.com/gdsfactory/gdsfactory/pull/3203)
+- fix klayout package image [#3202](https://github.com/gdsfactory/gdsfactory/pull/3202)
+- Bump kfactory[ipy] from 0.20.3 to 0.20.5 [#3208](https://github.com/gdsfactory/gdsfactory/pull/3208)
+- change docker to python311 [#3204](https://github.com/gdsfactory/gdsfactory/pull/3204)
+- Update pydantic requirement from <2.9,>=2.6 to >=2.6,<2.10 [#3194](https://github.com/gdsfactory/gdsfactory/pull/3194)
+- Improve klayout extension [#3201](https://github.com/gdsfactory/gdsfactory/pull/3201)
+
 
 ## [8.8.7](https://github.com/gdsfactory/gdsfactory/releases/tag/v8.8.7) - 2024-09-05
 

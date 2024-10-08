@@ -9,7 +9,6 @@ import gdsfactory as gf
 from gdsfactory.component import Component, ComponentReference
 from gdsfactory.components.bend_euler import bend_euler
 from gdsfactory.components.straight import straight as straight_function
-from gdsfactory.components.taper import taper as taper_function
 from gdsfactory.cross_section import strip
 from gdsfactory.port import Port, select_ports_optical
 from gdsfactory.routing.route_single import route_single
@@ -27,13 +26,13 @@ def route_south(
     gc_port_name: str = "o1",
     bend: ComponentSpec = bend_euler,
     straight: ComponentSpec = straight_function,
-    taper: ComponentSpec | None = taper_function,
     select_ports: Callable = select_ports_optical,
     port_names: Strs | None = None,
     cross_section: CrossSectionSpec = strip,
     start_straight_length: float = 0.5,
     port_type: str | None = None,
     allow_width_mismatch: bool = False,
+    auto_taper: bool = True,
 ) -> list[ManhattanRoute]:
     """Places routes to route a component ports to the south.
 
@@ -50,13 +49,13 @@ def route_south(
         gc_port_name: grating coupler port name. Used only if io_gratings_lines is supplied.
         bend: spec.
         straight: spec.
-        taper: spec.
         select_ports: function to select_ports.
         port_names: optional port names. Overrides select_ports.
         cross_section: cross_section spec.
         start_straight_length: in um.
         port_type: optical or electrical.
         allow_width_mismatch: allow width mismatch.
+        auto_taper: auto taper.
 
     Works well if the component looks roughly like a rectangular box with:
         north ports on the north of the box.
@@ -108,10 +107,10 @@ def route_south(
     conn_params = dict(
         bend=bend,
         straight=straight,
-        taper=taper,
         cross_section=cross_section,
         port_type=port_type,
         allow_width_mismatch=allow_width_mismatch,
+        auto_taper=auto_taper,
     )
 
     # Used to avoid crossing between straights in special cases
@@ -146,6 +145,7 @@ def route_south(
             orientation=90.0,
             width=p.dwidth,
             layer=cross_section.layer,
+            port_type=p.port_type,
         )
 
     west_ports.reverse()

@@ -26,7 +26,6 @@ def add_pads_bot(
     straight_separation: float = 15.0,
     pad_spacing: float | str = "pad_spacing",
     optical_routing_type: int | None = 1,
-    taper: ComponentSpec | None = None,
     port_type: str = "electrical",
     allow_width_mismatch: bool = True,
     fanout_length: float | None = 80,
@@ -49,7 +48,6 @@ def add_pads_bot(
         straight_separation: from wire edge to edge. Defaults to xs.width+xs.gap
         pad_spacing: in um. Defaults to pad_spacing constant from the PDK.
         optical_routing_type: None: auto, 0: no extension, 1: standard, 2: check.
-        taper: taper spec.
         port_type: port type.
         allow_width_mismatch: True
         fanout_length: if None, automatic calculation of fanout length.
@@ -130,7 +128,6 @@ def add_pads_bot(
         port_names=port_names,
         fiber_spacing=pad_spacing,
         optical_routing_type=optical_routing_type,
-        taper=taper,
         port_type=port_type,
         gc_port_name_fiber=pad_port_name,
         allow_width_mismatch=allow_width_mismatch,
@@ -164,7 +161,6 @@ def add_pads_top(
         bend: bend spec.
         straight_separation: from edge to edge.
         straight: straight spec.
-        taper: taper spec.
         get_input_label_text_loopback_function: function to get input label test.
         get_input_label_text_function: for labels.
         fanout_length: if None, automatic calculation of fanout length.
@@ -212,8 +208,10 @@ if __name__ == "__main__":
     # c = gf.components.pad()
     c = gf.components.straight_heater_metal(length=100.0)
     # c = gf.components.straight(length=100.0)
+    # c.pprint_ports()
     c = gf.routing.add_pads_top(component=c, port_names=("l_e1",))
-    c = gf.routing.add_fiber_array(c)
+    # c = gf.routing.add_pads_bot(component=c, port_names=("l_e4", "r_e4"), fanout_length=80)
+    # c = gf.routing.add_fiber_array(c)
     c.show()
     # c.show()
 

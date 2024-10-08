@@ -154,30 +154,17 @@ routes:
         links:
             tl,e3: tr,e1
             bl,e3: br,e1
-    optical:
-        settings:
-            port_type: optical
-            cross_section:
-                cross_section: strip
-                settings:
-                    radius: 100
-        links:
-            bl,e4: br,e3
-
 """
 
 
 def test_connections_different_factory() -> None:
     c = from_yaml(sample_different_factory)
-    lengths = [680000] * 2 + [700000]
+    lengths = [660000] * 2 + [700000]
     assert c.routes["electrical-tl,e3-tr,e1"].length == lengths[0], c.routes[
         "electrical-tl,e3-tr,e1"
     ].length
     assert c.routes["electrical-bl,e3-br,e1"].length == lengths[1], c.routes[
         "electrical-bl,e3-br,e1"
-    ].length
-    assert np.isclose(c.routes["optical-bl,e4-br,e3"].length, lengths[2]), c.routes[
-        "optical-bl,e4-br,e3"
     ].length
 
 
@@ -671,9 +658,10 @@ def test_gds_and_settings(
 
 
 if __name__ == "__main__":
-    # test_connections_2x2()
+    # test_sample()
+    test_connections_2x2()
     # test_connections_regex_backwards()
-    test_connections_different_factory()
+    # test_connections_different_factory()
     # import gdsfactory as gf
 
     # c = gf.read.from_yaml(sample_array2)

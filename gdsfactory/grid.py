@@ -5,6 +5,7 @@ Adapted from PHIDL https://github.com/amccaugh/phidl/ by Adam McCaughan
 
 from __future__ import annotations
 
+from itertools import zip_longest
 from typing import Literal
 
 import kfactory as kf
@@ -15,11 +16,11 @@ from gdsfactory.component import Component
 from gdsfactory.components.rectangle import rectangle
 from gdsfactory.components.text_rectangular import text_rectangular
 from gdsfactory.components.triangles import triangle
-from gdsfactory.typings import Anchor, ComponentSpec, ComponentSpecs, Float2
+from gdsfactory.typings import Anchor, ComponentSpec, ComponentSpecsOrComponents, Float2
 
 
 def grid(
-    components: ComponentSpecs = (rectangle, triangle),
+    components: ComponentSpecsOrComponents = (rectangle, triangle),
     spacing: tuple[float, float] | float = (5.0, 5.0),
     shape: tuple[int, int] | None = None,
     align_x: Literal["origin", "xmin", "xmax", "center"] = "center",
@@ -65,9 +66,11 @@ def grid(
         c,
         kcells=[gf.get_component(component) for component in components],
         shape=shape,
-        spacing=(float(spacing[0]), float(spacing[1]))
-        if isinstance(spacing, tuple | list)
-        else float(spacing),
+        spacing=(
+            (float(spacing[0]), float(spacing[1]))
+            if isinstance(spacing, tuple | list)
+            else float(spacing)
+        ),
         align_x=align_x,
         align_y=align_y,
         rotation=round(rotation // 90),
@@ -108,7 +111,7 @@ def grid_with_text(
         text: function to add text labels.
         spacing: between adjacent elements on the grid, can be a tuple for \
                 different distances in height and width.
-        shape: x, y shape of the grid (see np.reshape). \
+        shape: x, y shape of the grid (see np.reshape).
         align_x: x alignment along (origin, xmin, xmax, center).
         align_y: y alignment along (origin, ymin, ymax, center).
         rotation: for each component in degrees.
@@ -135,16 +138,18 @@ def grid_with_text(
 
     """
     components = [gf.get_component(component) for component in components]
-    text_offsets = text_offsets or [(0, 0)] * len(components)
-    text_anchors = text_anchors or ["center"] * len(components)
+    text_offsets = text_offsets or [(0, 0)]
+    text_anchors = text_anchors or ["center"]
     c = gf.Component()
     instances = kf.grid(
         c,
         kcells=components,
         shape=shape,
-        spacing=(float(spacing[0]), float(spacing[1]))
-        if isinstance(spacing, tuple | list)
-        else float(spacing),
+        spacing=(
+            (float(spacing[0]), float(spacing[1]))
+            if isinstance(spacing, tuple | list)
+            else float(spacing)
+        ),
         align_x=align_x,
         align_y=align_y,
         rotation=round(rotation // 90),
@@ -154,16 +159,18 @@ def grid_with_text(
         for j, instance in enumerate(instances_list):
             c.add_ports(instance.ports, prefix=f"{j}_{i}_")
             if text:
-                t = c << text(f"{text_prefix}{j}_{i}")
-                size_info = instance.dsize_info
-                o = np.array(text_offsets[j])
-                d = np.array(getattr(size_info, text_anchors[j]))
-                t.dmove(o + d)
-                if text_mirror:
-                    t.dmirror()
-                if text_rotation:
-                    t.drotate(text_rotation)
-
+                for text_offset, text_anchor in zip_longest(text_offsets, text_anchors):
+                    t = c << text(f"{text_prefix}{j}_{i}")
+                    size_info = instance.dsize_info
+                    text_offset = text_offset or (0, 0)
+                    text_anchor = text_anchor or "center"
+                    o = np.array(text_offset)
+                    d = np.array(getattr(size_info, text_anchor))
+                    t.dmove(o + d)
+                    if text_mirror:
+                        t.dmirror()
+                    if text_rotation:
+                        t.drotate(text_rotation)
     return c
 
 
@@ -184,6 +191,6 @@ if __name__ == "__main__":
         mirror=False,
         spacing=(200.0, 200.0),
         # spacing=1,
-        # text_offsets=((0, 100), (0, -100)),
+        text_offsets=((0, 100), (0, -100)),
     )
     c.show()
