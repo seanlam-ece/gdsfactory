@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import warnings
 from collections.abc import Callable
 
 import kfactory as kf
@@ -14,7 +13,6 @@ from gdsfactory.cross_section import strip
 from gdsfactory.port import select_ports_optical
 from gdsfactory.routing.route_bundle import get_min_spacing, route_bundle
 from gdsfactory.routing.route_single import route_single
-from gdsfactory.routing.route_south import route_south
 from gdsfactory.routing.utils import direction_ports_from_list_ports
 from gdsfactory.typings import (
     ComponentReference,
@@ -56,7 +54,6 @@ def route_fiber_array(
     allow_width_mismatch: bool = False,
     port_type: str = "optical",
     route_width: float | list[float] | None = 0,
-    route_backwards: bool = True,
 ) -> Component:
     """Returns new component with fiber array.
 
@@ -214,7 +211,7 @@ def route_fiber_array(
 
     # use x for grating coupler since we rotate it
     y0_optical = (
-        component.dymin - fanout_length - grating_coupler.ports[gc_port_name].dx
+        component.dymin - fanout_length - grating_coupler.ports[gc_port_name].dx - dy
     )
     y0_optical += -K / 2 * separation
 
@@ -254,23 +251,11 @@ def route_fiber_array(
     else:
         assert len(grating_indices) == nb_ports_per_line
 
-    route_south(
-        c,
-        component,
-        optical_routing_type=optical_routing_type,
-        excluded_ports=excluded_ports,
-        straight_separation=straight_separation,
-        io_gratings_lines=io_gratings_lines,
-        gc_port_name=gc_port_name,
-        bend=bend90,
-        straight=straight,
-        select_ports=select_ports,
-        port_names=port_names,
-        cross_section=cross_section,
-        port_type=port_type,
-        allow_width_mismatch=allow_width_mismatch,
+    to_route = (
+        [component_to_route.ports[p] for p in port_names]
+        if port_names
+        else component_to_route.ports
     )
-    to_route = c.ports
 
     # add grating couplers
     io_gratings = []
@@ -315,73 +300,34 @@ def route_fiber_array(
                 gr.dy += delta_y - min_y
 
     # If we add align ports, we need enough space for the bends
-    if len(io_gratings_lines) == 1:
-        io_gratings = io_gratings_lines[0]
-        gc_ports = [gc.ports[gc_port_name] for gc in io_gratings]
-        # c.shapes(c.kcl.layer(1,10)).insert(component_with_south_routes_bbox)
+    io_gratings = io_gratings_lines[0]
+    gc_ports = [gc.ports[gc_port_name] for gc in io_gratings]
+    # c.shapes(c.kcl.layer(1,10)).insert(component_with_south_routes_bbox)
 
-        ports1 = gc_ports if route_backwards else to_route
-        ports2 = to_route if route_backwards else gc_ports
-
-        route_bundle(
-            c,
-            ports1=ports1,
-            ports2=ports2,
-            separation=separation,
-            bend=bend90,
-            cross_section=cross_section,
-            port_type=port_type,
-            sort_ports=True,
-            allow_width_mismatch=allow_width_mismatch,
-            route_width=route_width,
-        )
-        if with_fiber_port:
-            fiber_ports = [gc.ports[gc_port_name_fiber] for gc in io_gratings]
-
-    else:
-        for io_gratings in io_gratings_lines:
-            gc_ports = [gc.ports[gc_port_name] for gc in io_gratings]
-            nb_gc_ports = len(io_gratings)
-            nb_ports_to_route = len(to_route)
-            n0 = nb_ports_to_route / 2
-            dn = nb_gc_ports / 2
-
-            ports1 = gc_ports if route_backwards else to_route[n0 - dn : n0 + dn]
-            ports2 = to_route[n0 - dn : n0 + dn] if route_backwards else gc_ports
-
-            route_bundle(
-                c,
-                ports1=ports1,
-                ports2=ports2,
-                separation=separation,
-                bend=bend90,
-                cross_section=cross_section,
-                port_type=port_type,
-                sort_ports=True,
-                allow_width_mismatch=allow_width_mismatch,
-                route_width=route_width,
-            )
-            del to_route[n0 - dn : n0 + dn]
-            if with_fiber_port:
-                fiber_ports = [gc.ports[gc_port_name_fiber] for gc in io_gratings]
+    route_bundle(
+        c,
+        ports1=to_route,
+        ports2=gc_ports,
+        separation=separation,
+        bend=bend90,
+        straight=straight,
+        cross_section=cross_section,
+        port_type=port_type,
+        sort_ports=True,
+        allow_width_mismatch=allow_width_mismatch,
+        route_width=route_width,
+        bboxes=[component.bbox()],
+    )
+    if gc_port_name_fiber not in grating_coupler_port_names:
+        gc_port_name_fiber = gc_port_names[0]
+    fiber_ports = [gc.ports[gc_port_name_fiber] for gc in io_gratings]
 
     c.ports = kf.Ports(kcl=c.kcl)
 
-    if with_fiber_port:
-        for i, port in enumerate(fiber_ports):
-            if port.port_type == "optical":
-                prefix = "o"
-            elif port.port_type.startswith("vertical"):
-                prefix = "v"
-            elif port.port_type == "electrical":
-                prefix = "e"
-            else:
-                warnings.warn(f"port.port_type={port.port_type} not recognized")
-                prefix = "p"
-            c.add_port(name=f"{prefix}{i+1}", port=port)
+    for component_port, port in zip(port_names, fiber_ports):
+        c.add_port(name=component_port, port=port)
 
     c.add_ports(ports_not_terminated)
-
     if with_loopback:
         ii = [grating_indices[0] - 1, grating_indices[-1] + 1]
         gca1 = c << grating_coupler
@@ -392,8 +338,9 @@ def route_fiber_array(
         gca1.dx = x_c - offset + ii[0] * fiber_spacing
         gca2.dx = x_c - offset + ii[1] * fiber_spacing
 
-        gca1.dymax = round(y0_optical - j * gr_coupler_y_sep)
-        gca2.dymax = round(y0_optical - j * gr_coupler_y_sep)
+        gc_loopback_dymin = io_gratings_lines[0][0].dymin
+        gca1.dymin = gc_loopback_dymin
+        gca2.dymin = gc_loopback_dymin
 
         port0 = gca1[gc_port_name]
         port1 = gca2[gc_port_name]
@@ -409,6 +356,9 @@ def route_fiber_array(
             inside=with_loopback_inside,
             d_loop=d_loop_dbu,
         )
+        bend90 = gf.get_component(
+            bend, cross_section=cross_section, radius=radius_loopback
+        )
 
         route_single(
             c,
@@ -419,11 +369,10 @@ def route_fiber_array(
             bend=bend90,
             cross_section=cross_section,
         )
-        if with_fiber_port:
-            port0 = gca1[gc_port_name_fiber]
-            port1 = gca2[gc_port_name_fiber]
-            c.add_port(name="loopback1", port=port0)
-            c.add_port(name="loopback2", port=port1)
+        port0 = gca1[gc_port_name_fiber]
+        port1 = gca2[gc_port_name_fiber]
+        c.add_port(name="loopback1", port=port0)
+        c.add_port(name="loopback2", port=port1)
     return c
 
 
@@ -461,27 +410,30 @@ if __name__ == "__main__":
     gc = gf.components.grating_coupler_elliptical_te(taper_length=10)
 
     # component = gf.components.nxn(north=10, south=10, east=10, west=10)
-    # component = gf.components.straight()
+    component = gf.components.straight()
     # component = gf.components.mmi2x2()
     # component = gf.components.straight_heater_metal()
     # component = gf.components.ring_single()
     # component = gf.components.ring_double()
     # component = gf.components.mzi_phase_shifter()
+    # component = gf.components.nxn(north=10, south=10, east=10, west=10)
+    # component= gf.c.straight(width=2, length=50)
 
     c = gf.Component()
-    ref = c << gf.c.straight(width=2, length=10)
+    ref = c << component
     routes = route_fiber_array(
         c,
         ref,
-        grating_coupler=gc,
-        with_loopback=True,
-        radius=10,
-        fiber_spacing=50,
+        # grating_coupler=gc,
+        # with_loopback=True,
+        # radius=10,
+        # fiber_spacing=50,
+        port_names=["o1"],
         # with_loopback=False,
         # optical_routing_type=1,
         # optical_routing_type=2,
-        # fanout_length=200,
-        force_manhattan=False,
+        # fanout_length=-200,
+        # force_manhattan=False,
     )
     c.show()
     c.pprint_ports()
